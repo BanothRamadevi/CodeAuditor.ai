@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Review & Rewrite Agent 🤖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                AI Code Review & Rewrite
+            </h1>
+            <p class="text-slate-400 mt-2">Simulate execution and get expert feedback instantly.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="space-y-4">
+                <div class="flex justify-between items-center bg-slate-800 p-3 rounded-t-lg border-b border-slate-700">
+                    <span class="font-semibold text-sm">Source Code</span>
+                    <select id="languageSelect" class="bg-slate-700 text-xs rounded px-2 py-1 outline-none border border-slate-600">
+                        <option value="Java">Java</option>
+                        <option value="Python">Python</option>
+                        <option value="C++">C++</option>
+                        <option value="JavaScript">JavaScript</option>
+                    </select>
+                </div>
+                <textarea id="codeInput" class="w-full h-96 p-4 bg-slate-800 border border-slate-700 rounded-b-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Paste your code here..."></textarea>
+                <button onclick="submitReview()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-bold transition-all shadow-lg shadow-blue-900/20">
+                    Analyze & Simulate Execution
+                </button>
+            </div>
+
+            <div id="resultsContainer" class="bg-slate-800 rounded-lg border border-slate-700 p-6 hidden overflow-y-auto max-h-[600px]">
+                <div id="reviewOutput" class="prose prose-invert max-w-none prose-sm">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function submitReview() {
+            const code = document.getElementById('codeInput').value;
+            const language = document.getElementById('languageSelect').value;
+            const resultsDiv = document.getElementById('resultsContainer');
+            const output = document.getElementById('reviewOutput');
+
+            if (!code.trim()) {
+                alert("Please enter some code first.");
+                return;
+            }
+
+            resultsDiv.classList.remove('hidden');
+            output.innerHTML = "<p class='animate-pulse text-blue-400'>🤖 Llama 3.3 is analyzing logic and calculating output...</p>";
+
+            try {
+                const response = await fetch('/api/review', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        code: code,
+                        language: language,
+                        focus_areas: ["Bugs", "Logic", "Output Accuracy", "Security"]
+                    })
+                });
+
+                const data = await response.json();
+                output.innerHTML = marked.parse(data.review);
+                
+                // Highlight code blocks in the AI's response
+                document.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+            } catch (err) {
+                output.innerHTML = "<p class='text-red-400'>Error: Could not reach the backend. Ensure main.py is running.</p>";
+            }
+        }
+    </script>
+</body>
+</html>
